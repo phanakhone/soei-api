@@ -12,17 +12,17 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "permissions", schema = "dbo")
 @Data
-public class RoleEntity {
+public class PermissionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "role_id", nullable = false)
-    private Integer roleId;
+    @Column(name = "permission_id")
+    private Integer permissionId;
 
-    @Column(name = "role_name", nullable = false, length = 50)
-    private String roleName;
+    @Column(name = "permission_name", nullable = false, length = 100)
+    private String permissionName;
 
-    @OneToMany(mappedBy = "role")
+    @OneToMany(mappedBy = "permission")
     private Set<RolePermissionsEntity> rolePermissions;
 }
