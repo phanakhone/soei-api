@@ -24,17 +24,21 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
     }
 
-    // Security filter chain for api
     @Bean
     public SecurityFilterChain basicAuthSecurityFilterChain(HttpSecurity http) throws Exception {
-        return http.securityMatcher("/api/**")
-                .authorizeHttpRequests(request -> {
-                    request.requestMatchers("/api/public/**").permitAll();
-                    request.anyRequest().authenticated();
-                })
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+        try {
+            return http.csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(
+                            req -> req
+                                    .requestMatchers("/public/**", "/api/auth/register", "/api/auth/login").permitAll()
+                                    .anyRequest().authenticated())
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error configuring HttpSecurity", e);
+        }
 
     }
 }

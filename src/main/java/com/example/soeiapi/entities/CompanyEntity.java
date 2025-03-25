@@ -23,6 +23,24 @@ public class CompanyEntity {
     @Column(name = "company_name", nullable = false, unique = true, length = 255)
     private String companyName;
 
+    @Column(name = "company_address", length = 255)
+    private String companyAddress;
+
+    @Column(name = "company_phone_number", length = 20)
+    private String companyPhoneNumber;
+
+    @Column(name = "company_email", length = 255)
+    private String companyEmail;
+
+    @Column(name = "company_website", length = 255)
+    private String companyWebsite;
+
+    @Column(name = "company_hotline_sale", length = 20)
+    private String companyHotlineSale;
+
+    @Column(name = "company_hotline_accident", length = 20)
+    private String companyHotlineAccident;
+
     @Column(name = "created_by")
     private Integer createdBy;
 

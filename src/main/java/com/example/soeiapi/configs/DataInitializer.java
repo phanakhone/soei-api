@@ -80,6 +80,7 @@ public class DataInitializer {
                 superAdminUser.setPassword(passwordEncoder.encode("superadmin"));
                 superAdminUser.setRole(roleRepository.findByRoleName("SUPER_ADMIN").orElseThrow());
                 superAdminUser.setCompany(companyRepository.findByCompanyName("AGL").orElseThrow());
+                superAdminUser.setEmail("phanakhone@agl.com.la");
                 userRepository.save(superAdminUser);
             }
         };

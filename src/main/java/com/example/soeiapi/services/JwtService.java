@@ -4,14 +4,21 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.example.soeiapi.entities.UserEntity;
+import com.example.soeiapi.entities.UserRefreshTokenEntity;
+import com.example.soeiapi.repositories.UserRefreshTokenRepository;
 
 @Service
 public class JwtService {
@@ -22,10 +29,25 @@ public class JwtService {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-    public String generateToken(Map<String, String> extraClaims, String username, long expireInterval) {
-        return Jwts.builder().claims().add(extraClaims).and().subject(username)
+    @Value("${security.jwt.refresh-expiration-time}")
+    private long refreshTokenExpiration;
+
+    @Autowired
+    private UserRefreshTokenRepository userRefreshTokenRepository;
+
+    private SecretKey getSignInKey() {
+        byte[] keyBytes = secretKey.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateToken(Map<String, String> extraClaims, String username) {
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expireInterval)).signWith(getSignInKey()).compact();
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignInKey())
+                .compact();
     }
 
     public String getUserName(String token) {
@@ -53,8 +75,27 @@ public class JwtService {
                 .getPayload();
     }
 
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
+    // refresh token
+    public String createUserRefreshToken(UserEntity user) {
+        UserRefreshTokenEntity userRefreshTokenEntity = new UserRefreshTokenEntity();
+        userRefreshTokenEntity.setUser(user);
+        userRefreshTokenEntity.setToken(UUID.randomUUID().toString());
+        userRefreshTokenEntity.setExpiryDate(Instant.now().plusMillis(refreshTokenExpiration));
+        userRefreshTokenRepository.save(userRefreshTokenEntity);
+
+        return userRefreshTokenEntity.getToken();
+    }
+
+    public UserRefreshTokenEntity validateRefreshToken(String token) {
+        UserRefreshTokenEntity userRefreshToken = userRefreshTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+
+        if (userRefreshToken.getExpiryDate().isBefore(Instant.now())) {
+            // delete the token
+            userRefreshTokenRepository.delete(userRefreshToken);
+            throw new RuntimeException("Refresh token has expired");
+        }
+
+        return userRefreshToken;
     }
 }
