@@ -18,7 +18,7 @@ import com.example.soeiapi.repositories.UserRepository;
 @Service
 public class AuthenticationService {
     @Autowired
-    private JwtService jwtService;
+    private JwtProvider jwtService;
 
     @Autowired
     private UserRepository userRepository;

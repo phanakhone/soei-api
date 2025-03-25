@@ -6,11 +6,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "role_permissions", schema = "dbo")
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class RolePermissionsEntity {
     @EmbeddedId
     private RolePermissionId id;

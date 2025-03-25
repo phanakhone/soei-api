@@ -1,7 +1,5 @@
 package com.example.soeiapi.configs;
 
-import java.security.Permission;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -11,9 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.soeiapi.entities.CompanyEntity;
 import com.example.soeiapi.entities.PermissionEntity;
 import com.example.soeiapi.entities.RoleEntity;
+import com.example.soeiapi.entities.RolePermissionId;
+import com.example.soeiapi.entities.RolePermissionsEntity;
 import com.example.soeiapi.entities.UserEntity;
 import com.example.soeiapi.repositories.CompanyRepository;
 import com.example.soeiapi.repositories.PermissionRepository;
+import com.example.soeiapi.repositories.RolePermissionsRepository;
 import com.example.soeiapi.repositories.RoleRepository;
 import com.example.soeiapi.repositories.UserRepository;
 
@@ -25,7 +26,8 @@ public class DataInitializer {
 
     @Bean
     public CommandLineRunner loadData(RoleRepository roleRepository, PermissionRepository permissionRepository,
-            UserRepository userRepository, CompanyRepository companyRepository) {
+            UserRepository userRepository, CompanyRepository companyRepository,
+            RolePermissionsRepository rolePermissionsRepository) {
         return args -> {
             if (roleRepository.count() == 0) {
                 RoleEntity superAdminRole = new RoleEntity();
@@ -60,6 +62,20 @@ public class DataInitializer {
                 permissionRepository.save(importDataPermission);
 
             }
+
+            // add ALL permission to SUPER_ADMIN role
+            RoleEntity superAdminRole = roleRepository.findByRoleName("SUPER_ADMIN").orElseThrow();
+            PermissionEntity permission = permissionRepository.findByPermissionName("ALL").orElseThrow();
+
+            RolePermissionId rolePermissionId = new RolePermissionId();
+            rolePermissionId.setRoleId(superAdminRole.getRoleId());
+            rolePermissionId.setPermissionId(permission.getPermissionId());
+
+            RolePermissionsEntity rolePermission = new RolePermissionsEntity();
+            rolePermission.setId(rolePermissionId);
+            rolePermission.setRole(superAdminRole);
+            rolePermission.setPermission(permission);
+            rolePermissionsRepository.save(rolePermission);
 
             // create company
             if (companyRepository.count() == 0) {

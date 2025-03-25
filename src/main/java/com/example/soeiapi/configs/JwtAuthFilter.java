@@ -9,34 +9,30 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.example.soeiapi.services.JwtService;
+import com.example.soeiapi.services.CustomUserDetailsService;
+import com.example.soeiapi.services.JwtProvider;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final JwtProvider jwtProvider;
+    private final CustomUserDetailsService customUserDetailsService;
+
     HandlerExceptionResolver handlerExceptionResolver;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-
-    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService,
-            HandlerExceptionResolver handlerExceptionResolver) {
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-        this.handlerExceptionResolver = handlerExceptionResolver;
-    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -68,12 +64,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String jwtToken = authHeader.substring(7);
 
-        if (jwtService.isTokenExpired(jwtToken)) {
+        if (jwtProvider.isTokenExpired(jwtToken)) {
             logger.info("Token validity expired");
             return;
         }
 
-        String userName = jwtService.getUserName(jwtToken);
+        String userName = jwtProvider.getUserName(jwtToken);
 
         if (userName == null) {
             logger.info("No username found in JWT Token");
@@ -90,7 +86,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Authenticate and create authentication instance
         logger.info("Create authentication instance for " + userName);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(userName);
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
                 userDetails.getAuthorities());
@@ -98,5 +94,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         // Store authentication token for application to use
         SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        logger.info("Authentication successful for " + userName);
+        logger.info("Roles: " + userDetails.getAuthorities());
     }
 }

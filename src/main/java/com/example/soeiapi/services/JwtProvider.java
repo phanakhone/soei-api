@@ -3,6 +3,8 @@ package com.example.soeiapi.services;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.util.Date;
@@ -14,14 +16,15 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.example.soeiapi.entities.UserEntity;
 import com.example.soeiapi.entities.UserRefreshTokenEntity;
 import com.example.soeiapi.repositories.UserRefreshTokenRepository;
 
-@Service
-public class JwtService {
+@Component
+@RequiredArgsConstructor
+public class JwtProvider {
 
     @Value("${security.jwt.secret-key}")
     private String secretKey;
@@ -76,7 +79,10 @@ public class JwtService {
     }
 
     // refresh token
+    @Transactional
     public String createUserRefreshToken(UserEntity user) {
+        userRefreshTokenRepository.deleteByUser(user);
+
         UserRefreshTokenEntity userRefreshTokenEntity = new UserRefreshTokenEntity();
         userRefreshTokenEntity.setUser(user);
         userRefreshTokenEntity.setToken(UUID.randomUUID().toString());
