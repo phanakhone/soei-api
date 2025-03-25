@@ -33,6 +33,7 @@ public class SecurityConfiguration {
                     .authorizeHttpRequests(
                             req -> req
                                     .requestMatchers("/public/**", "/api/auth/register", "/api/auth/login").permitAll()
+                                    .requestMatchers("/api/companies").hasRole("SUPER_ADMIN")
                                     .anyRequest().authenticated())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     // .authenticationProvider(authenticationProvider())

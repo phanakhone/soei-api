@@ -5,98 +5,86 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.example.soeiapi.entities.CompanyEntity;
-import com.example.soeiapi.entities.PermissionEntity;
-import com.example.soeiapi.entities.RoleEntity;
-import com.example.soeiapi.entities.RolePermissionId;
-import com.example.soeiapi.entities.RolePermissionsEntity;
-import com.example.soeiapi.entities.UserEntity;
-import com.example.soeiapi.repositories.CompanyRepository;
-import com.example.soeiapi.repositories.PermissionRepository;
-import com.example.soeiapi.repositories.RolePermissionsRepository;
-import com.example.soeiapi.repositories.RoleRepository;
-import com.example.soeiapi.repositories.UserRepository;
+import com.example.soeiapi.entities.*;
+import com.example.soeiapi.repositories.*;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Configuration
 public class DataInitializer {
+
+    private static final String SUPER_ADMIN_ROLE = "SUPER_ADMIN";
+    private static final String ALL_PERMISSION = "ALL";
+    private static final String DEFAULT_SUPER_ADMIN_USERNAME = "superadmin";
+    private static final String DEFAULT_SUPER_ADMIN_PASSWORD = "superadmin";
+    private static final String DEFAULT_SUPER_ADMIN_EMAIL = "phanakhone@agl.com.la";
+    private static final String DEFAULT_COMPANY_NAME = "AGL";
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Bean
+    @Transactional
     public CommandLineRunner loadData(RoleRepository roleRepository, PermissionRepository permissionRepository,
             UserRepository userRepository, CompanyRepository companyRepository,
             RolePermissionsRepository rolePermissionsRepository) {
         return args -> {
+            // Initialize roles
             if (roleRepository.count() == 0) {
-                RoleEntity superAdminRole = new RoleEntity();
-                superAdminRole.setRoleName("SUPER_ADMIN");
-                roleRepository.save(superAdminRole);
-
-                RoleEntity adminRole = new RoleEntity();
-                adminRole.setRoleName("ADMIN");
-                roleRepository.save(adminRole);
-
-                RoleEntity userRole = new RoleEntity();
-                userRole.setRoleName("USER");
-                roleRepository.save(userRole);
+                roleRepository.save(new RoleEntity(null, SUPER_ADMIN_ROLE, null));
+                roleRepository.save(new RoleEntity(null, "ADMIN", null));
+                roleRepository.save(new RoleEntity(null, "USER", null));
             }
 
+            // Initialize permissions
             if (permissionRepository.count() == 0) {
-                // permissions: ALL, MANAGE_SUB_USERS, VIEW_SUB_REPORTS, IMPORT_DATA
-                PermissionEntity allPermission = new PermissionEntity();
-                allPermission.setPermissionName("ALL");
-                permissionRepository.save(allPermission);
-
-                PermissionEntity manageSubUsersPermission = new PermissionEntity();
-                manageSubUsersPermission.setPermissionName("MANAGE_SUB_USERS");
-                permissionRepository.save(manageSubUsersPermission);
-
-                PermissionEntity viewSubReportsPermission = new PermissionEntity();
-                viewSubReportsPermission.setPermissionName("VIEW_SUB_REPORTS");
-                permissionRepository.save(viewSubReportsPermission);
-
-                PermissionEntity importDataPermission = new PermissionEntity();
-                importDataPermission.setPermissionName("IMPORT_DATA");
-                permissionRepository.save(importDataPermission);
-
+                permissionRepository.save(new PermissionEntity(null, ALL_PERMISSION, null));
+                permissionRepository.save(new PermissionEntity(null, "MANAGE_SUB_USERS", null));
+                permissionRepository.save(new PermissionEntity(null, "VIEW_SUB_REPORTS", null));
+                permissionRepository.save(new PermissionEntity(null, "IMPORT_DATA", null));
             }
 
-            // add ALL permission to SUPER_ADMIN role
-            RoleEntity superAdminRole = roleRepository.findByRoleName("SUPER_ADMIN").orElseThrow();
-            PermissionEntity permission = permissionRepository.findByPermissionName("ALL").orElseThrow();
+            // Add ALL permission to SUPER_ADMIN role
+            RoleEntity superAdminRole = roleRepository.findByRoleName(SUPER_ADMIN_ROLE)
+                    .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN role not found"));
+            PermissionEntity permission = permissionRepository.findByPermissionName(ALL_PERMISSION)
+                    .orElseThrow(() -> new IllegalStateException("ALL permission not found"));
 
-            RolePermissionId rolePermissionId = new RolePermissionId();
-            rolePermissionId.setRoleId(superAdminRole.getRoleId());
-            rolePermissionId.setPermissionId(permission.getPermissionId());
+            RolePermissionId rolePermissionId = new RolePermissionId(superAdminRole.getRoleId(),
+                    permission.getPermissionId());
+            if (!rolePermissionsRepository.existsById(rolePermissionId)) {
+                rolePermissionsRepository.save(new RolePermissionsEntity(rolePermissionId, superAdminRole, permission));
+            }
 
-            RolePermissionsEntity rolePermission = new RolePermissionsEntity();
-            rolePermission.setId(rolePermissionId);
-            rolePermission.setRole(superAdminRole);
-            rolePermission.setPermission(permission);
-            rolePermissionsRepository.save(rolePermission);
-
-            // create company
+            // Initialize company
             if (companyRepository.count() == 0) {
-                CompanyEntity company = new CompanyEntity();
-                company.setCompanyName("AGL");
-                companyRepository.save(company);
+                CompanyEntity agl = new CompanyEntity();
+                agl.setCompanyName(DEFAULT_COMPANY_NAME);
+                companyRepository.save(agl);
+
+                CompanyEntity forte = new CompanyEntity();
+                forte.setCompanyName("FORTE");
+                companyRepository.save(forte);
+
+                CompanyEntity sokxay = new CompanyEntity();
+                sokxay.setCompanyName("SOKXAY");
+                companyRepository.save(sokxay);
             }
 
+            // Initialize super admin user
             if (userRepository.count() == 0) {
-                // create a super admin user
-                // username: superadmin
-                // password: superadmin
-                // roles: SUPER_ADMIN
-                // permissions: ALL
+                CompanyEntity company = companyRepository.findByCompanyName(DEFAULT_COMPANY_NAME)
+                        .orElseThrow(() -> new IllegalStateException("Default company not found"));
 
                 UserEntity superAdminUser = new UserEntity();
-                superAdminUser.setUsername("superadmin");
-                superAdminUser.setPassword(passwordEncoder.encode("superadmin"));
-                superAdminUser.setRole(roleRepository.findByRoleName("SUPER_ADMIN").orElseThrow());
-                superAdminUser.setCompany(companyRepository.findByCompanyName("AGL").orElseThrow());
-                superAdminUser.setEmail("phanakhone@agl.com.la");
+                superAdminUser.setUsername(DEFAULT_SUPER_ADMIN_USERNAME);
+                superAdminUser.setPassword(passwordEncoder.encode(DEFAULT_SUPER_ADMIN_PASSWORD));
+                superAdminUser.setRole(superAdminRole);
+                superAdminUser.setCompany(company);
+                superAdminUser.setEmail(DEFAULT_SUPER_ADMIN_EMAIL);
                 userRepository.save(superAdminUser);
             }
         };

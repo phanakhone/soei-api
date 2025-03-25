@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
-@RequestMapping("/api/company")
+@RequestMapping("/api/companies")
 public class CompanyController {
     @Autowired
     private CompanyService companyService;
