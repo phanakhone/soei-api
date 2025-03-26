@@ -8,6 +8,7 @@ import com.example.soeiapi.dto.RegisterRequestDto;
 import com.example.soeiapi.dto.TokenValidateRequestDto;
 import com.example.soeiapi.security.JwtUtil;
 import com.example.soeiapi.services.AuthenticationService;
+import com.example.soeiapi.services.RoleService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +24,12 @@ public class AuthController {
 
     private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
+    private final RoleService roleService;
 
-    public AuthController(JwtUtil jwtUtil, AuthenticationService authenticationService) {
+    public AuthController(JwtUtil jwtUtil, AuthenticationService authenticationService, RoleService roleService) {
         this.jwtUtil = jwtUtil;
         this.authenticationService = authenticationService;
+        this.roleService = roleService;
     }
 
     @PostMapping("/register")
@@ -58,6 +61,13 @@ public class AuthController {
         } else {
             return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    // Get all roles
+    @PostMapping("/roles")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> getAllRoles() {
+        return ResponseEntity.ok(roleService.getAllRoles());
     }
 
 }

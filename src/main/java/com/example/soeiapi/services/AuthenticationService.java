@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +69,11 @@ public class AuthenticationService {
 
     public Map<String, String> login(LoginRequestDto loginRequestDto) {
         UserEntity user = userRepository.findByUsername(loginRequestDto.getUsername()).orElseThrow();
+
+        // **Check if user is enabled**
+        if (!user.isEnabled()) {
+            throw new BadCredentialsException("User account is disabled. Contact admin.");
+        }
 
         if (passwordEncoder.matches(loginRequestDto.getPassword(), user.getPassword())) {
             Map<String, String> claims = new HashMap<>();
