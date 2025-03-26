@@ -22,7 +22,7 @@ public class CompanyEntity {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     @Column(name = "company_id")
-    private int companyId;
+    private Long companyId;
 
     @Column(name = "company_name", nullable = false, unique = true, length = 255)
     private String companyName;

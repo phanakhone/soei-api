@@ -1,32 +1,30 @@
 package com.example.soeiapi.entities;
 
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
+import jakarta.persistence.ForeignKey;
+
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "role_permissions", schema = "dbo")
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class RolePermissionsEntity {
-    @EmbeddedId
-    private RolePermissionId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @MapsId("roleId")
-    @JoinColumn(name = "role_id")
+    @JoinColumn(name = "role_id", referencedColumnName = "role_id", foreignKey = @ForeignKey(name = "FK_role_permissions_role_id"))
     private RoleEntity role;
 
     @ManyToOne
-    @MapsId("permissionId")
-    @JoinColumn(name = "permission_id")
+    @JoinColumn(name = "permission_id", referencedColumnName = "permission_id", foreignKey = @ForeignKey(name = "FK_role_permissions_permission_id"))
     private PermissionEntity permission;
 
 }

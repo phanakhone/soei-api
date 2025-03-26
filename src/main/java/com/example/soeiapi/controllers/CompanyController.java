@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
@@ -19,6 +20,7 @@ public class CompanyController {
     private CompanyService companyService;
 
     @GetMapping()
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<CompanyEntity>> getAllCompanies() {
         return ResponseEntity.ok(companyService.getAllCompanies());
     }

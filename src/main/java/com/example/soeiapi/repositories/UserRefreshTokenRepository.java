@@ -2,6 +2,7 @@ package com.example.soeiapi.repositories;
 
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,7 @@ public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshTok
 
     Optional<UserRefreshTokenEntity> findByUser(UserEntity user);
 
-    // delete by userId
+    // delete by user
     @Modifying
     @Transactional
     @Query("delete from UserRefreshTokenEntity urt where urt.user= :user")

@@ -2,8 +2,10 @@ package com.example.soeiapi.entities;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
+
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,12 +15,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,7 +39,7 @@ public class UserEntity implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private int userId;
+    private Long userId;
 
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
@@ -53,15 +58,23 @@ public class UserEntity implements UserDetails {
     private CompanyEntity company;
 
     @ManyToOne
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "parent_id", nullable = true, referencedColumnName = "user_id")
     private UserEntity parent;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id", nullable = false)
-    private RoleEntity role;
+    // @ManyToOne
+    // @JoinColumn(name = "role_id", nullable = false)
+    // private RoleEntity role;
 
-    @OneToMany(mappedBy = "user")
-    private Set<UserPermissionsEntity> userPermissions;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<RoleEntity> roles = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    private Set<PermissionEntity> permissions = new HashSet<>();
+
+    // @OneToMany(mappedBy = "user")
+    // private Set<UserPermissionsEntity> userPermissions;
 
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
@@ -76,17 +89,20 @@ public class UserEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.getRoleName()));
-    }
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        // Add roles as authorities
+        authorities.addAll(roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
+                .collect(Collectors.toSet()));
 
-    @Override
-    public String getPassword() {
-        return password;
-    }
+        // Add permissions as authorities
+        authorities.addAll(permissions.stream()
+                .map(permission -> new SimpleGrantedAuthority(permission.getPermissionName()))
+                .collect(Collectors.toSet()));
 
-    @Override
-    public String getUsername() {
-        return username;
+        // Log authorities for debugging
+        authorities.forEach(authority -> System.out.println("Authority: " + authority.getAuthority()));
+        return authorities;
     }
 
     @Override

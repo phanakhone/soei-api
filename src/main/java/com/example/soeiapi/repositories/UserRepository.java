@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.example.soeiapi.entities.UserEntity;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Integer> {
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
 }

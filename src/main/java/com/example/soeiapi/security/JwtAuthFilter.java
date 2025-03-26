@@ -1,4 +1,4 @@
-package com.example.soeiapi.configs;
+package com.example.soeiapi.security;
 
 import java.io.IOException;
 
@@ -14,21 +14,23 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.example.soeiapi.services.CustomUserDetailsService;
-import com.example.soeiapi.services.JwtProvider;
+import com.example.soeiapi.services.UserDetailsServiceImpl;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final JwtProvider jwtProvider;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
+
+    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsServiceImpl) {
+        this.jwtUtil = jwtUtil;
+        this.userDetailsServiceImpl = userDetailsServiceImpl;
+    }
 
     HandlerExceptionResolver handlerExceptionResolver;
 
@@ -64,12 +66,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String jwtToken = authHeader.substring(7);
 
-        if (jwtProvider.isTokenExpired(jwtToken)) {
+        if (jwtUtil.isTokenExpired(jwtToken)) {
             logger.info("Token validity expired");
             return;
         }
 
-        String userName = jwtProvider.getUserName(jwtToken);
+        String userName = jwtUtil.extractUserName(jwtToken);
 
         if (userName == null) {
             logger.info("No username found in JWT Token");
@@ -86,7 +88,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Authenticate and create authentication instance
         logger.info("Create authentication instance for " + userName);
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(userName);
+        UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(userName);
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
                 userDetails.getAuthorities());
