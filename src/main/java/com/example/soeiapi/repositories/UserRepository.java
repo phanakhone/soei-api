@@ -9,5 +9,11 @@ import com.example.soeiapi.entities.UserEntity;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    // Exists by username or email
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
     Optional<UserEntity> findByUsername(String username);
+
 }

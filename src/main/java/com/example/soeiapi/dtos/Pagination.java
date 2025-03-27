@@ -1,12 +1,14 @@
-package com.example.soeiapi.dto;
+package com.example.soeiapi.dtos;
 
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Pagination {
     private Integer currentPage;
     private Integer perPage;

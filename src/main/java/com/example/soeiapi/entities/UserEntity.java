@@ -53,6 +53,9 @@ public class UserEntity implements UserDetails {
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled;
 
+    @Column(name = "created_by")
+    private String createdBy;
+
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
     private CompanyEntity company;

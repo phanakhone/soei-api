@@ -1,6 +1,7 @@
 package com.example.soeiapi.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -48,6 +49,16 @@ public class JwtUtil {
     public boolean isTokenExpired(String token) {
         Claims claims = extractAllClaims(token);
         return claims.getExpiration().before(new Date());
+    }
+
+    public boolean isValidJwt(String token) {
+        try {
+            Jwts.parser().verifyWith(getSignInKey()).build().parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            // TODO: catch expired check token
+            return false;
+        }
     }
 
     public boolean isTokenValid(String token) {

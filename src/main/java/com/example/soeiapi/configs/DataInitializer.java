@@ -23,7 +23,8 @@ public class DataInitializer {
     private static final String DEFAULT_SUPER_ADMIN_USERNAME = "superadmin";
     private static final String DEFAULT_SUPER_ADMIN_PASSWORD = "$uper@dmin!25";
     private static final String DEFAULT_SUPER_ADMIN_EMAIL = "phanakhone@agl.com.la";
-    private static final String DEFAULT_COMPANY_NAME = "AGL";
+    private static final String DEFAULT_COMPANY_NAME = "Assurance General Laos";
+    private static final String DEFAULT_SHORT_NAME = "AGL";
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -57,14 +58,17 @@ public class DataInitializer {
             if (companyRepository.count() == 0) {
                 CompanyEntity agl = new CompanyEntity();
                 agl.setCompanyName(DEFAULT_COMPANY_NAME);
+                agl.setCompanyShortName(DEFAULT_SHORT_NAME);
                 companyRepository.save(agl);
 
                 CompanyEntity forte = new CompanyEntity();
                 forte.setCompanyName("FORTE");
+                forte.setCompanyShortName("FORTE");
                 companyRepository.save(forte);
 
                 CompanyEntity sokxay = new CompanyEntity();
                 sokxay.setCompanyName("SOKXAY");
+                sokxay.setCompanyShortName("SOKXAY");
                 companyRepository.save(sokxay);
             }
 
@@ -82,6 +86,7 @@ public class DataInitializer {
                 superAdminUser.setRoles(Set.of(role));
                 superAdminUser.setCompany(company);
                 superAdminUser.setEmail(DEFAULT_SUPER_ADMIN_EMAIL);
+                superAdminUser.setEnabled(true);
                 userRepository.save(superAdminUser);
             }
         };

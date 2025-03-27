@@ -1,4 +1,4 @@
-package com.example.soeiapi.dto;
+package com.example.soeiapi.dtos;
 
 import java.util.List;
 

@@ -15,11 +15,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import com.example.soeiapi.services.UserDetailsServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.Map;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -43,16 +46,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             processToken(request);
 
+            logger.debug("Processing complete. Return back control to framework");
+
+            // Pass the control back to framework
+            filterChain.doFilter(request, response);
         } catch (Exception e) {
             logger.error("Failed to process JWT Token: " + e.getMessage());
             // Pass exceptions to response
-            handlerExceptionResolver.resolveException(request, response, null, e);
+
+            handleJwtError(response, e.getMessage());
+            // handlerExceptionResolver.resolveException(request, response, null, e);
         }
 
-        logger.debug("Processing complete. Return back control to framework");
-
-        // Pass the control back to framework
-        filterChain.doFilter(request, response);
     }
 
     private void processToken(HttpServletRequest request) {
@@ -65,6 +70,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String jwtToken = authHeader.substring(7);
+
+        // null token
+        if (!jwtUtil.isValidJwt(jwtToken)) {
+            logger.info("Invalid Token");
+            throw new RuntimeException("Invalid Token");
+        }
 
         if (jwtUtil.isTokenExpired(jwtToken)) {
             logger.info("Token validity expired");
@@ -99,5 +110,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         logger.info("Authentication successful for " + userName);
         logger.info("Roles: " + userDetails.getAuthorities());
+    }
+
+    private void handleJwtError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        Map<String, Object> errorResponse = Map.of(
+                "status", "error",
+                "message", message);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush(); // Ensure response is sent
     }
 }

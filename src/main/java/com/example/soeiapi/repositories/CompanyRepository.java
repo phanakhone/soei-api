@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.example.soeiapi.entities.CompanyEntity;
 
 @Repository
-public interface CompanyRepository extends JpaRepository<CompanyEntity, Integer> {
+public interface CompanyRepository extends JpaRepository<CompanyEntity, Long> {
     Optional<CompanyEntity> findByCompanyName(String companyName);
 
 }

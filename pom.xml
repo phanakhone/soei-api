@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.example</groupId>
 	<artifactId>soeiapi</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>25.03.001</version>
 	<name>soeiapi</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
-		<app.version>25.03.001</app.version>
+		<!-- <app.version>25.03.001</app.version> -->
 	</properties>
 	<dependencies>
 		<dependency>
