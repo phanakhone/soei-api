@@ -10,10 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.soeiapi.entities.*;
 import com.example.soeiapi.repositories.*;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Configuration
 public class DataInitializer {
@@ -38,6 +35,7 @@ public class DataInitializer {
             if (roleRepository.count() == 0) {
                 roleRepository.save(new RoleEntity(null, SUPER_ADMIN_ROLE, null));
                 roleRepository.save(new RoleEntity(null, "ADMIN", null));
+                roleRepository.save(new RoleEntity(null, "MODERATOR", null));
                 roleRepository.save(new RoleEntity(null, "USER", null));
             }
 
@@ -49,10 +47,11 @@ public class DataInitializer {
             }
 
             // Add ALL permission to SUPER_ADMIN role
-            RoleEntity superAdminRole = roleRepository.findByRoleName(SUPER_ADMIN_ROLE)
-                    .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN role not found"));
-            PermissionEntity permission = permissionRepository.findByPermissionName(ALL_PERMISSION)
-                    .orElseThrow(() -> new IllegalStateException("ALL permission not found"));
+            // RoleEntity superAdminRole = roleRepository.findByRoleName(SUPER_ADMIN_ROLE)
+            // .orElseThrow(() -> new IllegalStateException("SUPER_ADMIN role not found"));
+            // PermissionEntity permission =
+            // permissionRepository.findByPermissionName(ALL_PERMISSION)
+            // .orElseThrow(() -> new IllegalStateException("ALL permission not found"));
 
             // Initialize company
             if (companyRepository.count() == 0) {
