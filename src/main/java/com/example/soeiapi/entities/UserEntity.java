@@ -23,8 +23,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-
+import jakarta.persistence.PostLoad;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -50,11 +51,29 @@ public class UserEntity implements UserDetails {
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     @Column(name = "is_enabled", nullable = false)
     private boolean isEnabled;
 
     @Column(name = "created_by")
     private String createdBy;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
+
+    @Column(name = "is_verified")
+    private boolean isVerified;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
+    @Transient
+    private Integer level;
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
@@ -78,9 +97,6 @@ public class UserEntity implements UserDetails {
 
     // @OneToMany(mappedBy = "user")
     // private Set<UserPermissionsEntity> userPermissions;
-
-    @Column(name = "phone_number", length = 20)
-    private String phoneNumber;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -126,6 +142,20 @@ public class UserEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isEnabled;
+    }
+
+    @PostLoad
+    public void calculateLevel() {
+        this.level = computeUserLevel(this);
+    }
+
+    private int computeUserLevel(UserEntity user) {
+        int level = 1;
+        while (user.getParent() != null) {
+            user = user.getParent();
+            level++;
+        }
+        return level;
     }
 
 }

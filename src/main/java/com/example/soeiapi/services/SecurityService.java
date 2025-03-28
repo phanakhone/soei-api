@@ -49,6 +49,10 @@ public class SecurityService {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        // if super admin return true
+        if (user.getRoles().stream().anyMatch(role -> role.getRoleName().equals("SUPER_ADMIN"))) {
+            return true;
+        }
         return user.getCompany().getCompanyId().equals(companyId);
     }
 }

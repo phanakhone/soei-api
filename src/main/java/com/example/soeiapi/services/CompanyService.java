@@ -1,8 +1,11 @@
 package com.example.soeiapi.services;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.example.soeiapi.dtos.CreateCompanyRequestDto;
@@ -15,8 +18,13 @@ public class CompanyService {
     @Autowired
     private CompanyRepository companyRepository;
 
-    public List<CompanyEntity> getAllCompanies() {
-        return companyRepository.findAll();
+    public Page<CompanyEntity> getAllCompanies(PageRequest pageRequest, Map<String, String> filters) {
+        return companyRepository.findAll(pageRequest);
+    }
+
+    public CompanyEntity getCompany(Long companyId) {
+        return companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalStateException("Company not found"));
     }
 
     // create company

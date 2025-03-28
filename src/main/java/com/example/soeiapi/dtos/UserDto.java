@@ -14,10 +14,13 @@ public class UserDto {
     private String username;
     private String email;
     private List<String> roles;
+    private Long companyId;
+    private Integer level;
 
     public static UserDto fromEntity(UserEntity userEntity) {
         return new UserDto(userEntity.getUserId(), userEntity.getUsername(), userEntity.getEmail(),
-                userEntity.getRoles().stream().map(role -> role.getRoleName()).toList());
+                userEntity.getRoles().stream().map(role -> role.getRoleName()).toList(),
+                userEntity.getCompany().getCompanyId(), userEntity.getLevel());
     }
 
 }

@@ -113,14 +113,18 @@ public class AuthenticationService {
         String token = jwtService.generateToken(claims, user.getUsername());
         String refreshToken = userRefreshTokenService.createUserRefreshToken(user);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User logged in successfully");
-        response.put("status", "success");
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-        response.put("role", String.join(", ", user.getRoles().stream().map(RoleEntity::getRoleName).toList()));
-        response.put("token", token);
-        response.put("refreshToken", refreshToken);
+        // Map<String, String> response = new HashMap<>();
+        // response.put("message", "User logged in successfully");
+        // response.put("status", "success");
+        // response.put("username", user.getUsername());
+        // response.put("email", user.getEmail());
+        // response.put("role", String.join(", ",
+        // user.getRoles().stream().map(RoleEntity::getRoleName).toList()));
+        // response.put("token", token);
+        // response.put("refreshToken", refreshToken);
+
+        // update last login date time
+        userRepository.updateLastLogin(user.getUserId());
 
         return new AuthResponse(token, refreshToken, UserDto.fromEntity(user));
     }
