@@ -8,5 +8,7 @@ public class RegisterRequestDto {
     private String password;
     private String email;
     private Long companyId;
-    private Long roleId;
+    private Integer roleId;
+    private Long parentId;
+    private Boolean isEnabled;
 }

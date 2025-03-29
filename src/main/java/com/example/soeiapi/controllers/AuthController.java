@@ -6,15 +6,17 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.soeiapi.dtos.ApiResponse;
 import com.example.soeiapi.dtos.AuthResponse;
 import com.example.soeiapi.dtos.LoginRequestDto;
+import com.example.soeiapi.dtos.RefreshTokenRequestDto;
 import com.example.soeiapi.dtos.RegisterRequestDto;
 import com.example.soeiapi.dtos.TokenValidateRequestDto;
+import com.example.soeiapi.dtos.UserDto;
+import com.example.soeiapi.entities.UserEntity;
 import com.example.soeiapi.security.JwtUtil;
 import com.example.soeiapi.services.AuthenticationService;
+import com.example.soeiapi.services.UserService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -24,22 +26,26 @@ public class AuthController {
 
     private final JwtUtil jwtUtil;
     private final AuthenticationService authenticationService;
+    private final UserService userService;
 
-    public AuthController(JwtUtil jwtUtil, AuthenticationService authenticationService) {
+    public AuthController(JwtUtil jwtUtil, AuthenticationService authenticationService, UserService userService) {
         this.jwtUtil = jwtUtil;
         this.authenticationService = authenticationService;
-
+        this.userService = userService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequestDto registerRequestDto) {
-        return ResponseEntity.ok(authenticationService.register(registerRequestDto));
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasRole('MODERATOR')")
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequestDto registerRequestDto) {
+        AuthResponse authResponse = authenticationService.register(registerRequestDto);
+        return ResponseEntity.ok(ApiResponse.success("User register successfully", authResponse));
 
     }
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequestDto loginRequestDto) {
         AuthResponse authResponse = authenticationService.login(loginRequestDto);
+
         return ResponseEntity.ok(ApiResponse.success("Login successful", authResponse));
     }
 
@@ -47,7 +53,8 @@ public class AuthController {
     // only)
     @PostMapping("/validate-token")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> validateTokenAndGetUserInfo(@RequestBody TokenValidateRequestDto tokenValidateRequestDto) {
+    public ResponseEntity<ApiResponse<UserDto>> validateTokenAndGetUserInfo(
+            @RequestBody TokenValidateRequestDto tokenValidateRequestDto) {
         System.out.println("Token: " + tokenValidateRequestDto.getToken());
         // Validate the token
 
@@ -58,12 +65,19 @@ public class AuthController {
         if (!jwtUtil.isTokenValid(tokenValidateRequestDto.getToken())) {
             throw new RuntimeException("Invalid token or expired");
         }
-        // Extract user details from SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Object userDetails = authentication.getPrincipal();
-        // You can fetch roles, username, and other info if needed
-        return ResponseEntity.ok(userDetails);
 
+        // Get user detail from token
+        UserEntity user = userService.getUserByUsername(jwtUtil.extractUserName(tokenValidateRequestDto.getToken()));
+
+        return ResponseEntity.ok(ApiResponse.success("Token is valid", UserDto.fromEntity(user)));
+
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
+            @RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
+        AuthResponse authResponse = authenticationService.refreshToken(refreshTokenRequestDto.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", authResponse));
     }
 
 }

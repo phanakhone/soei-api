@@ -1,15 +1,13 @@
 package com.example.soeiapi.services;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.example.soeiapi.entities.CompanyEntity;
 import com.example.soeiapi.entities.UserEntity;
 import com.example.soeiapi.repositories.CompanyRepository;
 import com.example.soeiapi.repositories.UserRepository;
-
-import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class SecurityService {
@@ -45,7 +43,9 @@ public class SecurityService {
 
     }
 
-    public boolean checkUserOwnCompany(String username, Long companyId) {
+    public boolean checkUserOwnCompany(Authentication authentication, Long companyId) {
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 

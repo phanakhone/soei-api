@@ -74,19 +74,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // null token
         if (!jwtUtil.isValidJwt(jwtToken)) {
             logger.info("Invalid Token");
-            throw new RuntimeException("Invalid Token");
+            throw new RuntimeException("Invalid jwt Token");
         }
 
         if (jwtUtil.isTokenExpired(jwtToken)) {
-            logger.info("Token validity expired");
-            return;
+            logger.info("Jwt token validity expired");
+            throw new RuntimeException("Jwt token validity expired");
         }
 
         String userName = jwtUtil.extractUserName(jwtToken);
 
         if (userName == null) {
             logger.info("No username found in JWT Token");
-            return;
+            throw new RuntimeException("No username found in JWT Token");
         }
 
         // Get existing authentication instance

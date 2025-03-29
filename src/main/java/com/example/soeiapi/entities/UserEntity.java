@@ -58,7 +58,7 @@ public class UserEntity implements UserDetails {
     private String lastName;
 
     @Column(name = "is_enabled", nullable = false)
-    private boolean isEnabled;
+    private boolean isEnabled = false;
 
     @Column(name = "created_by")
     private String createdBy;
@@ -66,8 +66,8 @@ public class UserEntity implements UserDetails {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(name = "is_verified")
-    private boolean isVerified;
+    @Column(name = "is_verified", nullable = false)
+    private boolean isVerified = false;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;

@@ -15,12 +15,15 @@ public class UserDto {
     private String email;
     private List<String> roles;
     private Long companyId;
+    private Boolean isEnabled;
+    private Long parentId;
     private Integer level;
 
     public static UserDto fromEntity(UserEntity userEntity) {
         return new UserDto(userEntity.getUserId(), userEntity.getUsername(), userEntity.getEmail(),
                 userEntity.getRoles().stream().map(role -> role.getRoleName()).toList(),
-                userEntity.getCompany().getCompanyId(), userEntity.getLevel());
+                userEntity.getCompany().getCompanyId(), userEntity.isEnabled(), userEntity.getParent().getUserId(),
+                userEntity.getLevel());
     }
 
 }

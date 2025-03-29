@@ -1,9 +1,12 @@
 package com.example.soeiapi.configs;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -15,6 +18,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -23,6 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.example.soeiapi.security.JwtAuthFilter;
 
 import com.example.soeiapi.services.UserDetailsServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebSecurity
@@ -70,6 +76,10 @@ public class SecurityConfiguration {
                                     .anyRequest().authenticated())
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     // .authenticationProvider(authenticationProvider())
+                    .exceptionHandling(ex -> ex
+                            .authenticationEntryPoint(new Http403ForbiddenEntryPoint()) // Handles unauthorized access
+                            .accessDeniedHandler(customAccessDeniedHandler()) // Handles access denied
+                    )
                     .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                     .build();
 
@@ -77,6 +87,23 @@ public class SecurityConfiguration {
             throw new RuntimeException("Error configuring HttpSecurity", e);
         }
 
+    }
+
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.setContentType("application/json");
+            response.setStatus(HttpStatus.FORBIDDEN.value());
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("timestamp", System.currentTimeMillis());
+            body.put("status", HttpStatus.FORBIDDEN.value());
+            body.put("error", "Access Denied");
+            body.put("message", accessDeniedException.getMessage());
+            body.put("path", request.getRequestURI());
+
+            response.getOutputStream().write(new ObjectMapper().writeValueAsBytes(body));
+        };
     }
 
     // cors

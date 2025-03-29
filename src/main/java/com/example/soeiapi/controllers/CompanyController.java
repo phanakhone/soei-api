@@ -56,7 +56,6 @@ public class CompanyController {
     }
 
     @PostMapping()
-
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<CompanyEntity>> createCompany(
             @RequestBody CreateCompanyRequestDto createCompanyRequestDto) {
@@ -65,9 +64,10 @@ public class CompanyController {
     }
 
     @GetMapping("/{companyId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('ADMIN') and @securityService.checkUserOwnCompany(authentication, #companyId))")
-    public ResponseEntity<CompanyEntity> getCompany(@PathVariable Long companyId) {
-        return ResponseEntity.ok(companyService.getCompany(companyId));
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @securityService.checkUserOwnCompany(authentication, #companyId)")
+    public ResponseEntity<ApiResponse<CompanyEntity>> getCompany(@PathVariable Long companyId) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Fetch company successfully", companyService.getCompany(companyId)));
     }
 
     @PutMapping("/{companyId}")

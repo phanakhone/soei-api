@@ -1,17 +1,19 @@
 package com.example.soeiapi.repositories;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.soeiapi.entities.CompanyEntity;
 import com.example.soeiapi.entities.UserEntity;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
@@ -25,7 +27,9 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Page<UserEntity> findByCompany(CompanyEntity company, Pageable pageable);
 
     // update last login
-    @Query(value = "UPDATE users SET last_login = NOW() WHERE user_id = :userId", nativeQuery = true)
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = :userId", nativeQuery = true)
     void updateLastLogin(@Param("userId") Long userId);
 
     // update isEnabled
@@ -48,22 +52,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
             """, nativeQuery = true)
     Integer findUserLevel(@Param("userId") Long userId);
 
-    @Query(value = """
-            WITH UserHierarchy AS (
-                SELECT id, parent_id, 1 AS level
-                FROM users
-                WHERE id = :userId
-
-                UNION ALL
-
-                SELECT u.id, u.parent_id, uh.level + 1
-                FROM users u
-                INNER JOIN UserHierarchy uh ON u.parent_id = uh.id
-            )
-            SELECT u.* FROM users u
-            INNER JOIN UserHierarchy uh ON u.id = uh.id
-            WHERE uh.level > (SELECT level FROM UserHierarchy WHERE id = :userId)
-            """, nativeQuery = true)
-    List<UserEntity> findAllChildUsersExcludingSameLevel(@Param("userId") Long userId);
+    @Query(value = "WITH UserHierarchy AS (SELECT user_id, parent_id, 1 AS level FROM users WHERE user_id = :userId UNION ALL SELECT u.user_id, u.parent_id, uh.level + 1 FROM users u INNER JOIN UserHierarchy uh ON u.parent_id = uh.user_id) SELECT u.* FROM users u INNER JOIN UserHierarchy uh ON u.user_id = uh.user_id WHERE uh.level > (SELECT level FROM UserHierarchy WHERE user_id = :userId)", nativeQuery = true)
+    Page<UserEntity> findAllChildUsersExcludingSameLevel(@Param("userId") Long userId, Pageable pageable);
 
 }

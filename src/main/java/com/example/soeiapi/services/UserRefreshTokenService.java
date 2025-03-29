@@ -36,8 +36,8 @@ public class UserRefreshTokenService {
         return userRefreshTokenEntity.getToken();
     }
 
-    public UserRefreshTokenEntity validateRefreshToken(String token) {
-        UserRefreshTokenEntity userRefreshToken = userRefreshTokenRepository.findByToken(token)
+    public UserRefreshTokenEntity validateRefreshToken(String refreshToken) {
+        UserRefreshTokenEntity userRefreshToken = userRefreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
         if (userRefreshToken.getExpiryDate().isBefore(Instant.now())) {
