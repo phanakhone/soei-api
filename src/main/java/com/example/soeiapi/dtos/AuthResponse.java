@@ -8,18 +8,6 @@ import lombok.Data;
 public class AuthResponse {
     private String token;
     private String refreshToken;
-    // private String expiresAt;
     private UserDto user;
-
-    // @Data
-    // public static class UserDto {
-    // private Long id;
-    // private String username;
-    // private String email;
-    // private String fullName;
-    // private String role;
-    // private Long companyId;
-    // private String companyName;
-    // }
 
 }

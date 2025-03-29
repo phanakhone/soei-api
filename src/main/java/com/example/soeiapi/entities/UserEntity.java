@@ -1,5 +1,6 @@
 package com.example.soeiapi.entities;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -97,6 +98,9 @@ public class UserEntity implements UserDetails {
 
     // @OneToMany(mappedBy = "user")
     // private Set<UserPermissionsEntity> userPermissions;
+
+    @Column(name = "last_password_change_at")
+    private Instant lastPasswordChangeAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

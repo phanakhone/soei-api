@@ -8,6 +8,8 @@ import com.example.soeiapi.dtos.AuthResponse;
 import com.example.soeiapi.dtos.LoginRequestDto;
 import com.example.soeiapi.dtos.RefreshTokenRequestDto;
 import com.example.soeiapi.dtos.RegisterRequestDto;
+import com.example.soeiapi.dtos.RequestResetPasswordDto;
+import com.example.soeiapi.dtos.ResetPasswordDto;
 import com.example.soeiapi.dtos.TokenValidateRequestDto;
 import com.example.soeiapi.dtos.UserDto;
 import com.example.soeiapi.entities.UserEntity;
@@ -78,6 +80,24 @@ public class AuthController {
             @RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         AuthResponse authResponse = authenticationService.refreshToken(refreshTokenRequestDto.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", authResponse));
+    }
+
+    // send request password
+    @PostMapping("/request-password-reset")
+    public ResponseEntity<ApiResponse<String>> requestPasswordReset(
+            @RequestBody RequestResetPasswordDto requestResetPasswordDto) {
+        authenticationService.requestPasswordReset(requestResetPasswordDto.getUserId(),
+                requestResetPasswordDto.getTokenExpiryMinutes());
+        return ResponseEntity.ok(ApiResponse.success("Password reset request sent successfully", null));
+    }
+
+    // reset password
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @RequestBody ResetPasswordDto resetPasswordtDto) {
+        authenticationService.resetPassword(resetPasswordtDto.getResetPasswordToken(),
+                resetPasswordtDto.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully", null));
     }
 
 }
