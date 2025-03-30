@@ -84,9 +84,14 @@ public class JwtUtil {
         UserEntity user = userService.getUserByUsername(username);
 
         // check last password change date with token issue date
-        Long lastPasswordChange = user.getLastPasswordChangeAt().toEpochMilli();
+        Long lastPasswordChange = user.getLastPasswordChangeAt() != null
+                ? user.getLastPasswordChangeAt().toEpochMilli()
+                : 0L;
 
-        return !isTokenExpired(token) && (lastPasswordChange >= tokenIssueAt);
+        // if lastPasswordChange = 0L then true else lastPasswordChange < tokenIssueAt
+        // !isExpired
+        return (lastPasswordChange == 0L || lastPasswordChange < tokenIssueAt)
+                && !isTokenExpired(token);
     }
 
     private Claims extractAllClaims(String token) {

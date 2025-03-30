@@ -70,7 +70,8 @@ public class SecurityConfiguration {
                     .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                     .authorizeHttpRequests(
                             req -> req
-                                    .requestMatchers("/public/**", "/api/auth/login").permitAll()
+                                    .requestMatchers("/public/**", "/api/auth/login", "/api/auth/reset-password")
+                                    .permitAll()
                                     .requestMatchers("/api/super-admin/**")
                                     .hasRole("SUPER_ADMIN")
                                     .anyRequest().authenticated())

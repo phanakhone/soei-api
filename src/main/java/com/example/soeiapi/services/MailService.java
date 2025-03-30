@@ -8,7 +8,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,9 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import com.example.soeiapi.entities.UserEntity;
+import com.example.soeiapi.entities.UserResetPasswordTokenEntity;
 import com.example.soeiapi.repositories.UserRepository;
+import com.example.soeiapi.repositories.UserResetPasswordTokenRespository;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -24,31 +26,43 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class MailService {
+    @Value("${web.base.url}")
+    private String webBaseUrl;
+
     // logger
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
     private final UserRepository userRepository;
+    private final UserResetPasswordTokenRespository userResetPasswordTokenRespository;
     private final TemplateEngine templateEngine;
 
     @Autowired
     private JavaMailSender mailSender;
 
-    public MailService(UserRepository userRepository, TemplateEngine templateEngine) {
+    public MailService(UserRepository userRepository, TemplateEngine templateEngine,
+            UserResetPasswordTokenRespository userResetPasswordTokenRespository) {
+        this.userResetPasswordTokenRespository = userResetPasswordTokenRespository;
         this.userRepository = userRepository;
         this.templateEngine = templateEngine;
     }
 
-    public void sendResetPasswordEmailByUserId(Long userID) {
+    public void sendResetPasswordEmailByUserId(Long userID, Integer tokenExpiryMinutes) {
         try {
 
             UserEntity user = userRepository.findById(userID).orElseThrow(() -> new Exception("User not found"));
+            UserResetPasswordTokenEntity userResetPasswordToken = userResetPasswordTokenRespository
+                    .findByUser_UserId(user.getUserId())
+                    .orElseThrow(() -> new Exception("User reset password token not found"));
+            String token = userResetPasswordToken.getToken();
+
+            String resetPasswordUrl = webBaseUrl + "/?rpt=" + token;
 
             String subject = "Motor Compulsory Centralized System: Account Creation-Action required (Reset Password)";
             String templateName = "reset-password-email-template";
             Map<String, Object> variables = Map.of(
                     "dear", user.getUsername(),
-                    "tokenExpiryMinutes", 24,
-                    "resetPasswordUrl", "link");
+                    "tokenExpiryMinutes", tokenExpiryMinutes,
+                    "resetPasswordUrl", resetPasswordUrl);
             List<String> to = List.of(user.getEmail());
             List<String> cc = List.of("phanakhone@agl.com.la");
 

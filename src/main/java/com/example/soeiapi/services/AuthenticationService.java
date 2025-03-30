@@ -221,7 +221,7 @@ public class AuthenticationService {
 
         userResetPasswordTokenRepository.save(resetToken);
 
-        emailService.sendResetPasswordEmailByUserId(user.getUserId());
+        emailService.sendResetPasswordEmailByUserId(user.getUserId(), tokenExpiryMinutes);
     }
 
     // reset password

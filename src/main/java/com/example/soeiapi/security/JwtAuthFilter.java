@@ -78,7 +78,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         // check if token is expired or valid
-        if (jwtUtil.isTokenValid(jwtToken)) {
+        if (!jwtUtil.isTokenValid(jwtToken)) {
             logger.info("Jwt token validity expired");
             throw new RuntimeException("Jwt token validity expired");
         }

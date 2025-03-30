@@ -16,6 +16,8 @@ import jakarta.transaction.Transactional;
 public interface UserResetPasswordTokenRespository extends JpaRepository<UserResetPasswordTokenEntity, Long> {
     Optional<UserResetPasswordTokenEntity> findByToken(String token);
 
+    Optional<UserResetPasswordTokenEntity> findByUser_UserId(Long userId);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM UserResetPasswordTokenEntity urpt WHERE urpt.user.userId = :userId")
