@@ -1,6 +1,7 @@
 package com.example.soeiapi.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -11,8 +12,11 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Component;
+
+import com.example.soeiapi.entities.UserEntity;
+import com.example.soeiapi.services.UserService;
 
 @Component
 public class JwtUtil {
@@ -25,6 +29,12 @@ public class JwtUtil {
 
     // @Autowired
     // private UserRefreshTokenRepository userRefreshTokenRepository;
+
+    private final UserService userService;
+
+    public JwtUtil(UserService userService) {
+        this.userService = userService;
+    }
 
     private SecretKey getSignInKey() {
         byte[] keyBytes = secretKey.getBytes();
@@ -46,6 +56,11 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
+    public Long extractIssueAt(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.getIssuedAt().getTime();
+    }
+
     public boolean isTokenExpired(String token) {
         Claims claims = extractAllClaims(token);
         return claims.getExpiration().before(new Date());
@@ -55,14 +70,23 @@ public class JwtUtil {
         try {
             Jwts.parser().verifyWith(getSignInKey()).build().parseSignedClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("expired jwt token: " + e.getMessage());
         } catch (JwtException | IllegalArgumentException e) {
-            // TODO: catch expired check token
             return false;
         }
     }
 
     public boolean isTokenValid(String token) {
-        return !isTokenExpired(token);
+        Long tokenIssueAt = extractIssueAt(token);
+        String username = extractUserName(token);
+
+        UserEntity user = userService.getUserByUsername(username);
+
+        // check last password change date with token issue date
+        Long lastPasswordChange = user.getLastPasswordChangeAt().toEpochMilli();
+
+        return !isTokenExpired(token) && (lastPasswordChange >= tokenIssueAt);
     }
 
     private Claims extractAllClaims(String token) {

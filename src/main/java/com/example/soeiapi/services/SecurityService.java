@@ -55,4 +55,28 @@ public class SecurityService {
         }
         return user.getCompany().getCompanyId().equals(companyId);
     }
+
+    public boolean checkAuthUserHasAccessToUser(Authentication authentication, Long userId) {
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        UserEntity targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // return user.getUserId().equals(userId);
+
+        return isUserUnderHierarchy(user.getUserId(), targetUser);
+    }
+
+    // recursive search child
+    public boolean isUserUnderHierarchy(Long parentId, UserEntity child) {
+        if (child.getParent() == null) {
+            return false;
+        }
+        if (child.getParent().getUserId().equals(parentId)) {
+            return true;
+        }
+        return isUserUnderHierarchy(parentId, child.getParent()); // Recursively check higher levels
+    }
 }

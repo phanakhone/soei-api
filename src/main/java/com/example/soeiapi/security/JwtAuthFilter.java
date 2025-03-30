@@ -74,10 +74,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         // null token
         if (!jwtUtil.isValidJwt(jwtToken)) {
             logger.info("Invalid Token");
-            throw new RuntimeException("Invalid jwt Token");
+            throw new RuntimeException("Invalid jwt Token header");
         }
 
-        if (jwtUtil.isTokenExpired(jwtToken)) {
+        // check if token is expired or valid
+        if (jwtUtil.isTokenValid(jwtToken)) {
             logger.info("Jwt token validity expired");
             throw new RuntimeException("Jwt token validity expired");
         }

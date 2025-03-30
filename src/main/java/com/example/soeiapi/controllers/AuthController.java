@@ -3,13 +3,14 @@ package com.example.soeiapi.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.soeiapi.dtos.AdminResetPasswordDto;
 import com.example.soeiapi.dtos.ApiResponse;
 import com.example.soeiapi.dtos.AuthResponse;
 import com.example.soeiapi.dtos.LoginRequestDto;
 import com.example.soeiapi.dtos.RefreshTokenRequestDto;
 import com.example.soeiapi.dtos.RegisterRequestDto;
 import com.example.soeiapi.dtos.RequestResetPasswordDto;
-import com.example.soeiapi.dtos.ResetPasswordDto;
+import com.example.soeiapi.dtos.ResetPasswordWithTokenDto;
 import com.example.soeiapi.dtos.TokenValidateRequestDto;
 import com.example.soeiapi.dtos.UserDto;
 import com.example.soeiapi.entities.UserEntity;
@@ -17,8 +18,12 @@ import com.example.soeiapi.security.JwtUtil;
 import com.example.soeiapi.services.AuthenticationService;
 import com.example.soeiapi.services.UserService;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -61,7 +66,7 @@ public class AuthController {
         // Validate the token
 
         if (!jwtUtil.isValidJwt(tokenValidateRequestDto.getToken())) {
-            throw new RuntimeException("Invalid jwt token");
+            throw new RuntimeException("[validate-token] Invalid jwt token");
         }
 
         if (!jwtUtil.isTokenValid(tokenValidateRequestDto.getToken())) {
@@ -94,10 +99,20 @@ public class AuthController {
     // reset password
     @PostMapping("/reset-password")
     public ResponseEntity<ApiResponse<String>> resetPassword(
-            @RequestBody ResetPasswordDto resetPasswordtDto) {
-        authenticationService.resetPassword(resetPasswordtDto.getResetPasswordToken(),
-                resetPasswordtDto.getNewPassword());
+            @RequestBody ResetPasswordWithTokenDto resetPasswordtDto) {
+        authenticationService.resetPasswordWithToken(resetPasswordtDto);
         return ResponseEntity.ok(ApiResponse.success("Password reset successfully", null));
+    }
+
+    @PostMapping("/admin/reset-password")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('COMPANY_ADMIN') or hasRole('MODERATOR')")
+    public ResponseEntity<ApiResponse<String>> resetPasswordByAdmin(
+            @RequestBody @Valid AdminResetPasswordDto adminResetPasswordDto) {
+        // get auth user
+        UserDetails authUser = authenticationService.getAuthenticatedPrincipal();
+        authenticationService.resetPasswordByAdmin(authUser.getUsername(), adminResetPasswordDto);
+
+        return ResponseEntity.ok(ApiResponse.success("Password reset successfully by admin", null));
     }
 
 }

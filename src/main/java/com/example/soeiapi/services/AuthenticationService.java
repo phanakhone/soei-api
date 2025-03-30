@@ -9,14 +9,18 @@ import java.util.UUID;
 
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.soeiapi.dtos.AdminResetPasswordDto;
 import com.example.soeiapi.dtos.AuthResponse;
 import com.example.soeiapi.dtos.LoginRequestDto;
 import com.example.soeiapi.dtos.RegisterRequestDto;
+import com.example.soeiapi.dtos.ResetPasswordWithTokenDto;
 import com.example.soeiapi.dtos.UserDto;
 import com.example.soeiapi.entities.CompanyEntity;
 import com.example.soeiapi.entities.RoleEntity;
@@ -42,11 +46,12 @@ public class AuthenticationService {
     private final CompanyRepository companyRepository;
     private final UserResetPasswordTokenRespository userResetPasswordTokenRepository;
     private final MailService emailService;
+    private final SecurityService securityService;
 
     public AuthenticationService(UserRefreshTokenService userRefreshTokenService, JwtUtil jwtUtil,
             UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
             CompanyRepository companyRepository, UserResetPasswordTokenRespository userResetPasswordTokenRepository,
-            MailService emailService) {
+            MailService emailService, SecurityService securityService) {
         this.emailService = emailService;
         this.userRefreshTokenService = userRefreshTokenService;
         this.jwtUtil = jwtUtil;
@@ -55,6 +60,24 @@ public class AuthenticationService {
         this.roleRepository = roleRepository;
         this.companyRepository = companyRepository;
         this.userResetPasswordTokenRepository = userResetPasswordTokenRepository;
+        this.securityService = securityService;
+    }
+
+    public UserDetails getAuthenticatedPrincipal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())) {
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof UserDetails) {
+                return (UserDetails) principal; // Return username from UserDetails
+            } else {
+                throw new RuntimeException("pricipal is not instance of UserDetails");
+            }
+        }
+
+        throw new RuntimeException("User is not authenticated");
     }
 
     public AuthResponse register(RegisterRequestDto registerRequestDto) {
@@ -203,18 +226,62 @@ public class AuthenticationService {
 
     // reset password
     @Transactional
-    public void resetPassword(String token, String newPassword) {
+    public void resetPasswordWithToken(ResetPasswordWithTokenDto resetPasswordWithTokenDto) {
+        String token = resetPasswordWithTokenDto.getResetPasswordToken();
+        String newPassword = resetPasswordWithTokenDto.getNewPassword();
+
         UserResetPasswordTokenEntity resetToken = userResetPasswordTokenRepository.findByToken(token).orElseThrow(
-                () -> new RuntimeException("Invalid or expired token"));
+                () -> new RuntimeException("Invalid or expired reset password token"));
 
         UserEntity user = resetToken.getUser();
+
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setEnabled(true); // Enable the user after password reset
         user.setVerified(true); // Mark the user as verified after password reset
         user.setLastPasswordChangeAt(Instant.now());
-        ; // Update last login time
+
+        // Update last login time
         userRepository.save(user);
 
-        userResetPasswordTokenRepository.delete(resetToken); // Invalidate token after use
+        // Invalidate token after use
+        userResetPasswordTokenRepository.delete(resetToken);
+    }
+
+    @Transactional
+    public void resetPasswordByAdmin(String authUsername, AdminResetPasswordDto adminResetPasswordDto) {
+        Long userId = adminResetPasswordDto.getUserId();
+        String newPassword = adminResetPasswordDto.getNewPassword();
+
+        Long authUserId = userRepository
+                .findByUsername(authUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+                .getUserId();
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        boolean isSuperAdmin = userRepository
+                .findByUsername(authUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+                .getRoles()
+                .stream()
+                .anyMatch(role -> "SUPER_ADMIN".equals(role.getRoleName()));
+        if (!isSuperAdmin) {
+
+            if (securityService.isUserUnderHierarchy(authUserId, user)) {
+                throw new RuntimeException("You do not have permission to reset this user's password");
+            }
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setEnabled(true); // Enable the user after password reset
+        user.setVerified(true); // Mark the user as verified after password reset
+        user.setLastPasswordChangeAt(Instant.now());
+
+        // Update last login time
+        userRepository.save(user);
+
+        // Invalidate token after use
+        userResetPasswordTokenRepository.deleteByUserId(userId);
     }
 }
