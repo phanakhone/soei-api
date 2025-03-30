@@ -1,6 +1,7 @@
 package com.example.soeiapi.services;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -12,11 +13,9 @@ import com.example.soeiapi.repositories.UserRepository;
 @Service
 public class SecurityService {
     private final UserRepository userRepository;
-    private final CompanyRepository companyRepository;
 
     public SecurityService(UserRepository userRepository, CompanyRepository companyRepository) {
         this.userRepository = userRepository;
-        this.companyRepository = companyRepository;
     }
 
     public boolean isCompanyAdmin(Authentication authentication, Long companyId) {
@@ -79,4 +78,23 @@ public class SecurityService {
         }
         return isUserUnderHierarchy(parentId, child.getParent()); // Recursively check higher levels
     }
+
+    public boolean isSameCompany(Long userId) {
+        UserEntity authUser = userRepository.findByUsername(
+                ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        return authUser.getCompany().getCompanyId().equals(user.getCompany().getCompanyId());
+    }
+
+    public boolean isProfileOwner(Long userId) {
+        UserEntity authUser = userRepository.findByUsername(
+                ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return authUser.getUserId().equals(userId);
+    }
+
 }

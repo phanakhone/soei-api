@@ -24,8 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found: " + username));
 
-        System.out.println("Roles: " + user.getRoles());
-        System.out.println("Permissions: " + user.getPermissions());
+        System.out.println("Roles: " + user.getRoles() + ", Permissions: " + user.getPermissions());
         return user;
     }
 }

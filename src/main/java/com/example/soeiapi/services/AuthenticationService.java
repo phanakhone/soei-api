@@ -25,6 +25,7 @@ import com.example.soeiapi.dtos.UserDto;
 import com.example.soeiapi.entities.CompanyEntity;
 import com.example.soeiapi.entities.RoleEntity;
 import com.example.soeiapi.entities.UserEntity;
+import com.example.soeiapi.entities.UserProfileEntity;
 import com.example.soeiapi.entities.UserRefreshTokenEntity;
 import com.example.soeiapi.entities.UserResetPasswordTokenEntity;
 import com.example.soeiapi.repositories.CompanyRepository;
@@ -78,6 +79,18 @@ public class AuthenticationService {
         }
 
         throw new RuntimeException("User is not authenticated");
+    }
+
+    public UserEntity getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            throw new RuntimeException("User is not authenticated");
+        }
+
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        return user;
     }
 
     public AuthResponse register(RegisterRequestDto registerRequestDto) {
@@ -277,6 +290,12 @@ public class AuthenticationService {
         user.setEnabled(true); // Enable the user after password reset
         user.setVerified(true); // Mark the user as verified after password reset
         user.setLastPasswordChangeAt(Instant.now());
+
+        // Create empty profile
+        UserProfileEntity userProfile = new UserProfileEntity();
+        userProfile.setUser(user);
+
+        user.setProfile(userProfile);
 
         // Update last login time
         userRepository.save(user);

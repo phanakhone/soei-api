@@ -15,23 +15,29 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.soeiapi.dtos.ApiResponse;
 import com.example.soeiapi.dtos.Pagination;
+import com.example.soeiapi.dtos.UpdateUserProfileDto;
 import com.example.soeiapi.entities.RoleEntity;
 import com.example.soeiapi.entities.UserEntity;
+import com.example.soeiapi.entities.UserProfileEntity;
 import com.example.soeiapi.services.UserService;
+import com.example.soeiapi.services.UserProfileService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 // import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
+    private final UserProfileService userProfileService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserProfileService userProfileService) {
         this.userService = userService;
+        this.userProfileService = userProfileService;
     }
 
     @GetMapping()
@@ -77,6 +83,21 @@ public class UserController {
         response.put("enabled", updatedUser.isEnabled() ? 1 : 0);
 
         return ResponseEntity.ok(ApiResponse.success("User enabled status updated successfully", response));
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserProfileEntity>> getUserProfile(@PathVariable Long userId) {
+        UserProfileEntity userProfile = userProfileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success("Fetch user profile successfully", userProfile));
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserProfileEntity>> updateUserProfile(
+            @PathVariable Long userId, @RequestBody UpdateUserProfileDto updatedUserProfileDto) {
+
+        UserProfileEntity profile = userProfileService.updateProfile(userId, updatedUserProfileDto);
+
+        return ResponseEntity.ok(ApiResponse.success("Update user profile successfully", profile));
     }
 
 }
