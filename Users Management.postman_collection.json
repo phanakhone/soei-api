@@ -177,7 +177,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\":\"test3\",\r\n    \"password\":\"test3\"\r\n}",
+							"raw": "{\r\n    \"username\":\"test3\",\r\n    \"password\":\"test999\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -291,7 +291,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"userId\": \"1\",\r\n    \"tokenExpiryMinutes\": 15\r\n}",
+							"raw": "{\r\n    \"userId\": \"5\",\r\n    \"tokenExpiryMinutes\": 15\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -315,21 +315,11 @@
 				{
 					"name": "reset password (with reset token)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{token}}",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"resetPasswordToken\": \"5\",\r\n    \"newPassword\": \"test33\"\r\n}",
+							"raw": "{\r\n    \"resetPasswordToken\": \"d60e1264-8db9-4492-890a-6796d4ef0e17\",\r\n    \"newPassword\": \"test99\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -367,7 +357,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"userId\": \"5\",\r\n    \"newPassword\": \"test33\"\r\n}",
+							"raw": "{\r\n    \"userId\": \"5\",\r\n    \"newPassword\": \"test333\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -478,14 +468,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/companies/2",
+							"raw": "{{base_url}}/api/companies/1",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"api",
 								"companies",
-								"2"
+								"1"
 							]
 						}
 					},
