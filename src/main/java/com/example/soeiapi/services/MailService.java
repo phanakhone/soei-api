@@ -64,9 +64,10 @@ public class MailService {
                     "tokenExpiryMinutes", tokenExpiryMinutes,
                     "resetPasswordUrl", resetPasswordUrl);
             List<String> to = List.of(user.getEmail());
-            List<String> cc = List.of("phanakhone@agl.com.la");
+            List<String> cc = List.of();
+            List<String> bcc = List.of("phanakhone@agl.com.la", "chittaphone@agl.com.la");
 
-            sendHtmlEmail(to, cc, subject, templateName, variables);
+            sendHtmlEmail(to, cc, bcc, subject, templateName, variables);
 
             logger.info("Email sent successfully to " + user.getEmail());
 
@@ -76,7 +77,7 @@ public class MailService {
         }
     }
 
-    public void sendHtmlEmail(List<String> to, List<String> cc, String subject, String templateName,
+    public void sendHtmlEmail(List<String> to, List<String> cc, List<String> bcc, String subject, String templateName,
             Map<String, Object> variables) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
@@ -91,8 +92,14 @@ public class MailService {
         helper.setFrom(new InternetAddress("no-reply@agl.com.la", "Motor Compulsory Centralized System",
                 StandardCharsets.UTF_8.name()));
         helper.setTo(to.toArray(new String[0]));
+        // cc
         if (cc != null && !cc.isEmpty()) {
             helper.setCc(cc.toArray(new String[0])); // Converts List to Array
+        }
+
+        // bcc
+        if (bcc != null && !bcc.isEmpty()) {
+            helper.setBcc(bcc.toArray(new String[0])); // Converts List to Array
         }
         helper.setText(htmlContent, true); // Enable HTML
 
