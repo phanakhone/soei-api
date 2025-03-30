@@ -56,16 +56,18 @@ public class MailService {
             String token = userResetPasswordToken.getToken();
 
             String resetPasswordUrl = webBaseUrl + "/?rpt=" + token;
+            String tokenExpiry = (tokenExpiryMinutes / 60) >= 1 ? String.valueOf(tokenExpiryMinutes / 60) + " hours"
+                    : String.valueOf(tokenExpiryMinutes) + " minutes";
 
             String subject = "Motor Compulsory Centralized System: Account Creation-Action required (Reset Password)";
             String templateName = "reset-password-email-template";
             Map<String, Object> variables = Map.of(
                     "dear", user.getUsername(),
-                    "tokenExpiryMinutes", tokenExpiryMinutes,
+                    "tokenExpiry", tokenExpiry,
                     "resetPasswordUrl", resetPasswordUrl);
             List<String> to = List.of(user.getEmail());
             List<String> cc = List.of();
-            List<String> bcc = List.of("phanakhone@agl.com.la", "chittaphone@agl.com.la");
+            List<String> bcc = List.of();
 
             sendHtmlEmail(to, cc, bcc, subject, templateName, variables);
 
