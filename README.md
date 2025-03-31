@@ -19,6 +19,10 @@ User management api for soei system.
 
 3. Companies
 
+## Roles permission
+
+1. SUPER_ADMIN
+
 ## For open port access to wsl
 
 ### Find your WSL IP address first (run in WSL)

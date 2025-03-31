@@ -19,7 +19,7 @@ import com.example.soeiapi.dtos.UpdateUserProfileDto;
 import com.example.soeiapi.dtos.UserProfileDto;
 import com.example.soeiapi.entities.RoleEntity;
 import com.example.soeiapi.entities.UserEntity;
-import com.example.soeiapi.entities.UserProfileEntity;
+
 import com.example.soeiapi.services.UserService;
 import com.example.soeiapi.services.UserProfileService;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -93,14 +93,43 @@ public class AuthenticationService {
         return user;
     }
 
+    // function generate username
+    public String generateUsername(long companyId, Integer roleId) {
+        // generate username format companyShortName + roleId + 000001(get last 6 digit
+        // of latest row in users)
+        String companyShortName = companyRepository.findById(companyId)
+                .orElseThrow(() -> new RuntimeException("Company not found")).getCompanyShortName();
+        UserEntity lastUser = userRepository.findLatestUserByCompanyIdAndRoleId(companyId, roleId).orElse(null);
+
+        String username = companyShortName + String.format("%02d", roleId);
+        if (lastUser != null && lastUser.getUsername().length() > 6) {
+            String lastUserIdStr = lastUser.getUsername().substring(lastUser.getUsername().length() - 5);
+            int lastUserIdInt = Integer.parseInt(lastUserIdStr);
+            lastUserIdInt++;
+            String lastUserIdNew = String.format("%05d", lastUserIdInt);
+            username += lastUserIdNew;
+        } else {
+            username += "00001";
+        }
+        return username;
+    }
+
     public AuthResponse register(RegisterRequestDto registerRequestDto) {
         // get auth user
         UserEntity authUser = userRepository
                 .findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        boolean isSuperAdmin = authUser.getRoles().stream()
+                .anyMatch(role -> "SUPER_ADMIN".equals(role.getRoleName()));
+        // generate username or get username
+        String username = registerRequestDto.getUsername() != null ? registerRequestDto.getUsername()
+                : generateUsername(
+                        isSuperAdmin ? registerRequestDto.getCompanyId() : authUser.getCompany().getCompanyId(),
+                        registerRequestDto.getRoleId());
+
         // check username and email exists
-        if (userRepository.existsByUsername(registerRequestDto.getUsername())) {
+        if (userRepository.existsByUsername(username)) {
             throw new RuntimeException("Username already exists");
         }
 
@@ -109,7 +138,7 @@ public class AuthenticationService {
         }
 
         UserEntity user = new UserEntity();
-        user.setUsername(registerRequestDto.getUsername());
+        user.setUsername(username);
         user.setEmail(registerRequestDto.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
         user.setEnabled(registerRequestDto.getIsEnabled() == null ? false : registerRequestDto.getIsEnabled());
@@ -137,11 +166,20 @@ public class AuthenticationService {
                     () -> new RuntimeException("Role with id " + registerRequestDto.getRoleId() + " not found"));
             user.setRoles(Set.of(role));
 
-            // check if parent user exists
-            UserEntity authenticatedUser = userRepository.findById(registerRequestDto.getParentId()).orElseThrow(
-                    () -> new RuntimeException(
-                            "Parent user with id " + registerRequestDto.getParentId() + " not found"));
-            user.setParent(authenticatedUser);
+            // check if parentId user exists
+            UserEntity parentUser;
+            if (registerRequestDto.getParentId() == null) {
+                parentUser = null;
+            } else {
+                parentUser = userRepository.findById(registerRequestDto.getParentId()).orElse(null);
+            }
+
+            if (parentUser == null) {
+                user.setParent(parentUser);
+            } else {
+                user.setParent(null);
+            }
+
         } else {
             if (authUser != null) {
                 user.setCompany(authUser.getCompany());
@@ -149,8 +187,15 @@ public class AuthenticationService {
                 throw new RuntimeException("Authenticated user is null");
             }
 
-            RoleEntity userRole = roleRepository.findByRoleName("USER")
-                    .orElseThrow(() -> new RuntimeException("Role 'USER' not found"));
+            RoleEntity userRole;
+            if (registerRequestDto.getRoleId() != null) {
+                userRole = roleRepository.findById(registerRequestDto.getRoleId())
+                        .orElseThrow(() -> new RuntimeException("Role 'USER' not found"));
+            } else {
+                userRole = roleRepository.findByRoleName("USER").orElseThrow(
+                        () -> new RuntimeException("Role 'USER' not found"));
+            }
+
             user.setRoles(Set.of(userRole));
 
             user.setParent(authUser);
@@ -285,7 +330,22 @@ public class AuthenticationService {
                 .getRoles()
                 .stream()
                 .anyMatch(role -> "SUPER_ADMIN".equals(role.getRoleName()));
-        if (!isSuperAdmin) {
+
+        boolean isAdmin = userRepository
+                .findByUsername(authUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+                .getRoles()
+                .stream()
+                .anyMatch(role -> "ADMIN".equals(role.getRoleName()));
+
+        boolean isModerator = userRepository
+                .findByUsername(authUsername)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+                .getRoles()
+                .stream()
+                .anyMatch(role -> "MODERATOR".equals(role.getRoleName()));
+
+        if (!isSuperAdmin || !isAdmin || !isModerator) {
 
             if (securityService.isUserUnderHierarchy(authUserId, user)) {
                 throw new RuntimeException("You do not have permission to reset this user's password");

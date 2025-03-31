@@ -73,8 +73,9 @@ public class DataInitializer {
 
             // Initialize super admin user
             if (userRepository.count() == 0) {
-                CompanyEntity company = companyRepository.findByCompanyName(DEFAULT_COMPANY_NAME)
-                        .orElseThrow(() -> new IllegalStateException("Default company not found"));
+                // CompanyEntity company =
+                // companyRepository.findByCompanyName(DEFAULT_COMPANY_NAME)
+                // .orElseThrow(() -> new IllegalStateException("Default company not found"));
 
                 RoleEntity role = roleRepository.findByRoleName("SUPER_ADMIN")
                         .orElseThrow(() -> new RuntimeException("Default role not found"));
@@ -83,7 +84,7 @@ public class DataInitializer {
                 superAdminUser.setUsername(DEFAULT_SUPER_ADMIN_USERNAME);
                 superAdminUser.setPassword(passwordEncoder.encode(DEFAULT_SUPER_ADMIN_PASSWORD));
                 superAdminUser.setRoles(Set.of(role));
-                superAdminUser.setCompany(company);
+                superAdminUser.setCompany(null);
                 superAdminUser.setEmail(DEFAULT_SUPER_ADMIN_EMAIL);
                 superAdminUser.setEnabled(true);
                 userRepository.save(superAdminUser);

@@ -23,7 +23,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -105,7 +104,7 @@ public class AuthController {
     }
 
     @PostMapping("/admin/reset-password")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('COMPANY_ADMIN') or hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse<String>> resetPasswordByAdmin(
             @RequestBody @Valid AdminResetPasswordDto adminResetPasswordDto) {
         // get auth user
