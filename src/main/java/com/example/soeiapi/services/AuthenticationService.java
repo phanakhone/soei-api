@@ -156,6 +156,12 @@ public class AuthenticationService {
             user.setParent(authUser);
         }
 
+        // Create empty profile
+        UserProfileEntity userProfile = new UserProfileEntity();
+        userProfile.setUser(user);
+
+        user.setProfile(userProfile);
+
         userRepository.save(user);
 
         return new AuthResponse(null, null, UserDto.fromEntity(user));
@@ -290,12 +296,6 @@ public class AuthenticationService {
         user.setEnabled(true); // Enable the user after password reset
         user.setVerified(true); // Mark the user as verified after password reset
         user.setLastPasswordChangeAt(Instant.now());
-
-        // Create empty profile
-        UserProfileEntity userProfile = new UserProfileEntity();
-        userProfile.setUser(user);
-
-        user.setProfile(userProfile);
 
         // Update last login time
         userRepository.save(user);

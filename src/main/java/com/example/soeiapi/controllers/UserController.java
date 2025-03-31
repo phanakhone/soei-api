@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.soeiapi.dtos.ApiResponse;
 import com.example.soeiapi.dtos.Pagination;
 import com.example.soeiapi.dtos.UpdateUserProfileDto;
+import com.example.soeiapi.dtos.UserProfileDto;
 import com.example.soeiapi.entities.RoleEntity;
 import com.example.soeiapi.entities.UserEntity;
 import com.example.soeiapi.entities.UserProfileEntity;
@@ -85,17 +86,17 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("User enabled status updated successfully", response));
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserProfileEntity>> getUserProfile(@PathVariable Long userId) {
-        UserProfileEntity userProfile = userProfileService.getProfileByUserId(userId);
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<ApiResponse<UserProfileDto>> getUserProfile(@PathVariable Long userId) {
+        UserProfileDto userProfile = userProfileService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("Fetch user profile successfully", userProfile));
     }
 
-    @PutMapping("/{userId}")
-    public ResponseEntity<ApiResponse<UserProfileEntity>> updateUserProfile(
+    @PutMapping("/{userId}/profile")
+    public ResponseEntity<ApiResponse<UserProfileDto>> updateUserProfile(
             @PathVariable Long userId, @RequestBody UpdateUserProfileDto updatedUserProfileDto) {
 
-        UserProfileEntity profile = userProfileService.updateProfile(userId, updatedUserProfileDto);
+        UserProfileDto profile = userProfileService.updateProfile(userId, updatedUserProfileDto);
 
         return ResponseEntity.ok(ApiResponse.success("Update user profile successfully", profile));
     }

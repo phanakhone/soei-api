@@ -14,6 +14,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -73,6 +75,7 @@ public class UserEntity implements UserDetails {
     private Integer level;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false, orphanRemoval = true)
+    @JsonIgnore // 🔹 Prevent infinite recursion
     private UserProfileEntity profile;
 
     @ManyToOne
@@ -160,5 +163,11 @@ public class UserEntity implements UserDetails {
         }
         return level;
     }
+
+    // set profile and ensure bidirectional mapping
+    // public void setProfile(UserProfileEntity profile) {
+    // this.profile = profile;
+    // profile.setUser(this); // Ensure bidirectional mapping
+    // }
 
 }

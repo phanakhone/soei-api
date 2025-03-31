@@ -55,7 +55,7 @@ public class MailService {
                     .orElseThrow(() -> new Exception("User reset password token not found"));
             String token = userResetPasswordToken.getToken();
 
-            String resetPasswordUrl = webBaseUrl + "/?rpt=" + token;
+            String resetPasswordUrl = webBaseUrl + "/#/reset-password/" + token;
             String tokenExpiry = (tokenExpiryMinutes / 60) >= 1 ? String.valueOf(tokenExpiryMinutes / 60) + " hours"
                     : String.valueOf(tokenExpiryMinutes) + " minutes";
 

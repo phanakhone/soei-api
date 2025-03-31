@@ -1,10 +1,14 @@
 package com.example.soeiapi.dtos;
 
-// import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class UpdateUserProfileDto {
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserProfileDto {
+    private Long userProfileId;
     private String firstName;
     private String lastName;
     private String gender;
