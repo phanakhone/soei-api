@@ -28,7 +28,7 @@ public class RoleController {
 
     // Get all roles
     @GetMapping()
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN') or hasRole('MODERATOR')")
     public ResponseEntity<ApiResponse<List<RoleEntity>>> getAllRoles(@RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Map<String, String> filters) {
